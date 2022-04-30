@@ -19,7 +19,7 @@ _C.BASE = ['']
 # -----------------------------------------------------------------------------
 _C.DATA = CN()
 # Batch size for a single GPU, could be overwritten by command line argument
-_C.DATA.BATCH_SIZE = 128
+_C.DATA.BATCH_SIZE = 64
 # Path to dataset, could be overwritten by command line argument
 _C.DATA.DATA_PATH = ''
 # Dataset name
@@ -52,7 +52,7 @@ _C.MODEL.PRETRAINED = ''
 # Checkpoint to resume, could be overwritten by command line argument
 _C.MODEL.RESUME = ''
 # Number of classes, overwritten in data preparation
-_C.MODEL.NUM_CLASSES = 1000
+_C.MODEL.NUM_CLASSES = 26
 # Dropout rate
 _C.MODEL.DROP_RATE = 0.0
 # Drop path rate
@@ -91,8 +91,8 @@ _C.MODEL.SWIN_MLP.PATCH_NORM = True
 # -----------------------------------------------------------------------------
 _C.TRAIN = CN()
 _C.TRAIN.START_EPOCH = 0
-_C.TRAIN.EPOCHS = 300
-_C.TRAIN.WARMUP_EPOCHS = 20
+_C.TRAIN.EPOCHS = 100
+_C.TRAIN.WARMUP_EPOCHS = 8
 _C.TRAIN.WEIGHT_DECAY = 0.05
 _C.TRAIN.BASE_LR = 5e-4
 _C.TRAIN.WARMUP_LR = 5e-7
@@ -112,7 +112,7 @@ _C.TRAIN.USE_CHECKPOINT = False
 _C.TRAIN.LR_SCHEDULER = CN()
 _C.TRAIN.LR_SCHEDULER.NAME = 'cosine'
 # Epoch interval to decay LR, used in StepLRScheduler
-_C.TRAIN.LR_SCHEDULER.DECAY_EPOCHS = 30
+_C.TRAIN.LR_SCHEDULER.DECAY_EPOCHS = 15
 # LR decay rate, used in StepLRScheduler
 _C.TRAIN.LR_SCHEDULER.DECAY_RATE = 0.1
 
