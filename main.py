@@ -310,7 +310,7 @@ def test_out(config, data_loader, model):
   
   data = {'id': file_name_arr, 'category':prediction_arr}  
   df = pd.DataFrame(data)
-  df.to_csv('/content/drive/MyDrive/Nhan_Dang', index=False)
+  df.to_csv('/content/drive/MyDrive/Nhan_Dang/submission.csv', index=False)
 
 @torch.no_grad()
 def throughput(data_loader, model, logger):
