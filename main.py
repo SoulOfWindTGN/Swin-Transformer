@@ -11,6 +11,7 @@ import random
 import argparse
 import datetime
 import numpy as np
+import pandas as pd
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -125,14 +126,7 @@ def main(config):
         acc1, acc5, loss = validate(config, data_loader_val, model)
         logger.info(f"Accuracy of the network on the {len(dataset_val)} test images: {acc1:.1f}%")
         if config.EVAL_MODE:
-            model.eval()
-            for idx, (images, target) in enumerate(data_loader):
-                images = images.cuda(non_blocking=True)
-                target = target.cuda(non_blocking=True)
-
-            # compute output
-            output = model(images)
-            logger.info("Label: ",output)
+            test_out(config, data_loader_test, model)
             return
 
     if config.MODEL.PRETRAINED and (not config.MODEL.RESUME):
@@ -290,6 +284,33 @@ def validate(config, data_loader, model):
     logger.info(f' * Acc@1 {acc1_meter.avg:.3f} Acc@5 {acc5_meter.avg:.3f}')
     return acc1_meter.avg, acc5_meter.avg, loss_meter.avg
 
+@torch.no_grad()
+def test_out(config, data_loader, model):
+  model.eval()
+  file_name_arr = []
+  prediction_arr = []
+  map_label = {0: "bamboo", 1: "banana", 2: "cacao", 3: "cinnamon", 4: "coffeearabica",\
+    5: "dragonfruit", 6: "durian", 7: "frangipani", 8: "guava", 9: "jackfruit", 10: "lychee",\
+    11: "mango", 12: "mangosteen", 13: "nilam", 14: "papaya", 15: "passiflora", 16: "sawo", 17: "snakefruit",\
+    18: "starfruit", 19: "sugarpalm", 20: "suweg", 21: "taro", 22: "vanilla", 23: "waterguava", 24: "whitepepper", 25: "zodia"}
+  file_path = sorted(os.listdir("/content/bali-26_test/bali-26_test"))
+
+  for idx, (images, target) in enumerate(data_loader):
+    images = images.cuda(non_blocking=True)
+    target = target.cuda(non_blocking=True)
+    file_idx = file_path[idx]
+
+    # compute output
+    output = model(images)
+    prediction = map_label[output.cpu().data.numpy().argmax()]
+    file_name_arr.append(file_idx)
+    prediction_arr.append(prediction)
+    if(idx % 100 == 0):
+      logger.info("Predicted " + str(idx + 1) + " / " + str(len(file_path)))
+  
+  data = {'id': file_name_arr, 'category':prediction_arr}  
+  df = pd.DataFrame(data)
+  df.to_csv('/content/drive/MyDrive/Nhan_Dang', index=False)
 
 @torch.no_grad()
 def throughput(data_loader, model, logger):
