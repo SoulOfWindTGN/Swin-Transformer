@@ -127,7 +127,7 @@ def build_dataset(is_train, config):
 
 def build_test(is_train,config):
     transform = build_transform(is_train, config)
-    dataset = datasets.ImageFolder("/content/bali-26_test", transform=transform)
+    dataset = datasets.ImageFolder("/kaggle/input/baliv2/Bali/test", transform=transform)
     return dataset
 
 
