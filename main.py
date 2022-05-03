@@ -77,7 +77,7 @@ def parse_option():
 
 
 def main(config):
-    dataset_train, dataset_val, data_loader_train, data_loader_val, mixup_fn = build_loader(config)
+    dataset_train, dataset_val, dataset_test, data_loader_train, data_loader_val, data_loader_test, mixup_fn = build_loader(config)
 
     logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
     model = build_model(config)
@@ -125,6 +125,14 @@ def main(config):
         acc1, acc5, loss = validate(config, data_loader_val, model)
         logger.info(f"Accuracy of the network on the {len(dataset_val)} test images: {acc1:.1f}%")
         if config.EVAL_MODE:
+            model.eval()
+            for idx, (images, target) in enumerate(data_loader):
+                images = images.cuda(non_blocking=True)
+                target = target.cuda(non_blocking=True)
+
+            # compute output
+            output = model(images)
+            logger.info("Label: ",output)
             return
 
     if config.MODEL.PRETRAINED and (not config.MODEL.RESUME):

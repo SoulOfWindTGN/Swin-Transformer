@@ -6,6 +6,7 @@
 # --------------------------------------------------------
 
 import os
+from turtle import Turtle
 import torch
 import numpy as np
 import torch.distributed as dist
@@ -42,6 +43,7 @@ def build_loader(config):
     print(f"local rank {config.LOCAL_RANK} / global rank {dist.get_rank()} successfully build train dataset")
     dataset_val, _ = build_dataset(is_train=False, config=config)
     print(f"local rank {config.LOCAL_RANK} / global rank {dist.get_rank()} successfully build val dataset")
+    dataset_test = build_test(is_train=False, config=config)
 
     num_tasks = dist.get_world_size()
     global_rank = dist.get_rank()
@@ -55,10 +57,15 @@ def build_loader(config):
 
     if config.TEST.SEQUENTIAL:
         sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+        sample_test = torch.utils.data.SequentialSampler(dataset_test)
     else:
         sampler_val = torch.utils.data.distributed.DistributedSampler(
             dataset_val, shuffle=False
         )
+        sampler_test = torch.utils.data.distributed.DistributedSampler(
+            dataset_test, shuffle=False
+        )
+
 
     data_loader_train = torch.utils.data.DataLoader(
         dataset_train, sampler=sampler_train,
@@ -77,6 +84,15 @@ def build_loader(config):
         drop_last=False
     )
 
+    data_loader_test = torch.utils.data.DataLoader(
+        dataset_test, sampler=sampler_test,
+        batch_size=1,
+        shuffle=False,
+        num_workers=config.DATA.NUM_WORKERS,
+        pin_memory=config.DATA.PIN_MEMORY,
+        drop_last=False
+    )
+
     # setup mixup / cutmix
     mixup_fn = None
     mixup_active = config.AUG.MIXUP > 0 or config.AUG.CUTMIX > 0. or config.AUG.CUTMIX_MINMAX is not None
@@ -86,7 +102,7 @@ def build_loader(config):
             prob=config.AUG.MIXUP_PROB, switch_prob=config.AUG.MIXUP_SWITCH_PROB, mode=config.AUG.MIXUP_MODE,
             label_smoothing=config.MODEL.LABEL_SMOOTHING, num_classes=config.MODEL.NUM_CLASSES)
 
-    return dataset_train, dataset_val, data_loader_train, data_loader_val, mixup_fn
+    return dataset_train, dataset_val, dataset_test, data_loader_train, data_loader_val, data_loader_test, mixup_fn
 
 
 def build_dataset(is_train, config):
@@ -108,6 +124,11 @@ def build_dataset(is_train, config):
         raise NotImplementedError("We only support ImageNet Now.")
 
     return dataset, nb_classes
+
+def build_test(is_train,config):
+    transform = build_transform(is_train, config)
+    dataset = datasets.ImageFolder("/content/bali-26_test", transform=transform)
+    return dataset
 
 
 def build_transform(is_train, config):
